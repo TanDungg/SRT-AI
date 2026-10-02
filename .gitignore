@@ -1,0 +1,24 @@
+# Python
+__pycache__/
+*.py[cod]
+.venv/
+venv/
+
+# Secrets & Config
+config.json
+
+# Local artifacts & Rendered Videos
+*.mp4
+!examples/scene-01-monkey-mountain-banana-whiteboard.mp4
+output/
+assets/whiteboard/proj_*
+assets/uploads/
+assets/drawing-hand.png
+test_*.png
+test_*.jpg
+test_*.html
+temp_*.html
+
+# OS
+Thumbs.db
+.DS_Store

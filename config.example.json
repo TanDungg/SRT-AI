@@ -1,0 +1,12 @@
+{
+  "provider": "gemini",
+  "gemini_api_key": "",
+  "gemini_model": "gemini-3-flash-preview",
+  "image_provider": "huggingface",
+  "huggingface_token": "",
+  "huggingface_model": "black-forest-labs/FLUX.1-schnell",
+  "muse_token": "",
+  "muse_endpoint": "https://api.muse.ai/v1/generate",
+  "openai_api_key": "",
+  "openai_model": "gpt-4o-mini"
+}

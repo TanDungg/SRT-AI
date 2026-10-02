@@ -1,0 +1,1260 @@
+<!DOCTYPE html>
+<html lang="vi">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Whiteboard Studio AI · Quy trình sản xuất tự động</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Outfit:wght@300;400;500;600;700&family=JetBrains+Mono:wght@400;500&display=swap" rel="stylesheet">
+  <style>
+    :root {
+      --bg: #0b0d13;
+      --card-bg: rgba(20, 24, 34, 0.9);
+      --card-border: rgba(255, 255, 255, 0.08);
+      --card-hover: rgba(255, 255, 255, 0.12);
+      --primary: #3b82f6;
+      --primary-hover: #2563eb;
+      --primary-glow: rgba(59, 130, 246, 0.35);
+      --accent: #8b5cf6;
+      --accent-cyan: #06b6d4;
+      --text: #f8fafc;
+      --text-muted: #94a3b8;
+      --success: #10b981;
+      --danger: #ef4444;
+      --radius: 14px;
+      --transition: all 0.25s cubic-bezier(0.16, 1, 0.3, 1);
+    }
+
+    * { box-sizing: border-box; margin: 0; padding: 0; }
+
+    body {
+      font-family: 'Outfit', -apple-system, sans-serif;
+      background: var(--bg);
+      color: var(--text);
+      min-height: 100vh;
+      display: flex;
+      flex-direction: column;
+      background-image: 
+        radial-gradient(circle at 10% 15%, rgba(59, 130, 246, 0.09) 0%, transparent 45%),
+        radial-gradient(circle at 90% 85%, rgba(139, 92, 246, 0.09) 0%, transparent 45%);
+    }
+
+    header {
+      background: rgba(15, 18, 26, 0.85);
+      backdrop-filter: blur(16px);
+      border-bottom: 1px solid var(--card-border);
+      padding: 16px 32px;
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      position: sticky;
+      top: 0;
+      z-index: 100;
+    }
+
+    .brand { display: flex; align-items: center; gap: 12px; }
+    .brand-icon {
+      width: 40px; height: 40px;
+      background: linear-gradient(135deg, var(--primary), var(--accent));
+      border-radius: 10px;
+      display: flex; align-items: center; justify-content: center;
+      font-size: 20px;
+      box-shadow: 0 4px 16px var(--primary-glow);
+    }
+    .brand-title { font-size: 19px; font-weight: 700; letter-spacing: -0.3px; }
+    .brand-tag {
+      font-size: 11px; font-weight: 600; padding: 3px 8px; border-radius: 20px;
+      background: rgba(59, 130, 246, 0.15); color: #60a5fa; border: 1px solid rgba(59, 130, 246, 0.3);
+    }
+
+    /* Stepper Bar */
+    .stepper-wrap {
+      background: rgba(18, 22, 32, 0.7);
+      border-bottom: 1px solid var(--card-border);
+      padding: 14px 32px;
+      display: flex;
+      justify-content: center;
+    }
+
+    .stepper {
+      display: flex;
+      align-items: center;
+      gap: 12px;
+      max-width: 900px;
+      width: 100%;
+    }
+
+    .step-item {
+      display: flex;
+      align-items: center;
+      gap: 8px;
+      color: var(--text-muted);
+      font-size: 13px;
+      font-weight: 500;
+      transition: var(--transition);
+      flex: 1;
+    }
+
+    .step-num {
+      width: 28px;
+      height: 28px;
+      border-radius: 50%;
+      background: rgba(255, 255, 255, 0.06);
+      border: 1px solid var(--card-border);
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      font-size: 12px;
+      font-weight: 700;
+      color: var(--text-muted);
+      transition: var(--transition);
+    }
+
+    .step-item.active {
+      color: #fff;
+    }
+
+    .step-item.active .step-num {
+      background: var(--primary);
+      border-color: var(--primary);
+      color: #fff;
+      box-shadow: 0 0 12px var(--primary-glow);
+    }
+
+    .step-item.completed {
+      color: var(--success);
+    }
+
+    .step-item.completed .step-num {
+      background: var(--success);
+      border-color: var(--success);
+      color: #fff;
+    }
+
+    .step-line {
+      height: 2px;
+      flex: 1;
+      background: rgba(255, 255, 255, 0.08);
+      margin: 0 4px;
+    }
+
+    /* Container */
+    main {
+      flex: 1;
+      max-width: 1280px;
+      width: 100%;
+      margin: 28px auto;
+      padding: 0 24px;
+    }
+
+    .view-card {
+      background: var(--card-bg);
+      border: 1px solid var(--card-border);
+      border-radius: var(--radius);
+      padding: 32px;
+      backdrop-filter: blur(16px);
+      box-shadow: 0 12px 40px rgba(0, 0, 0, 0.4);
+      display: flex;
+      flex-direction: column;
+      gap: 24px;
+      animation: fadeIn 0.3s ease;
+    }
+
+    @keyframes fadeIn {
+      from { opacity: 0; transform: translateY(8px); }
+      to { opacity: 1; transform: translateY(0); }
+    }
+
+    .card-head {
+      display: flex;
+      flex-direction: column;
+      gap: 6px;
+    }
+
+    .card-head h2 {
+      font-size: 22px;
+      font-weight: 700;
+      color: #fff;
+      display: flex;
+      align-items: center;
+      gap: 10px;
+    }
+
+    .card-head p {
+      font-size: 14px;
+      color: var(--text-muted);
+    }
+
+    /* Inputs */
+    .form-group {
+      display: flex;
+      flex-direction: column;
+      gap: 10px;
+    }
+
+    label {
+      font-size: 14px;
+      font-weight: 600;
+      color: #e2e8f0;
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+    }
+
+    .input-text {
+      width: 100%;
+      background: rgba(0, 0, 0, 0.35);
+      border: 1px solid rgba(255, 255, 255, 0.12);
+      border-radius: 10px;
+      padding: 14px 18px;
+      font-family: inherit;
+      font-size: 15px;
+      color: #fff;
+      outline: none;
+      transition: var(--transition);
+    }
+
+    .input-text:focus {
+      border-color: var(--primary);
+      box-shadow: 0 0 0 3px rgba(59, 130, 246, 0.2);
+    }
+
+    /* Ratio Picker */
+    .ratio-grid {
+      display: grid;
+      grid-template-columns: repeat(4, 1fr);
+      gap: 12px;
+    }
+
+    .ratio-card {
+      background: rgba(255, 255, 255, 0.03);
+      border: 1px solid var(--card-border);
+      border-radius: 10px;
+      padding: 16px 12px;
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      gap: 8px;
+      cursor: pointer;
+      transition: var(--transition);
+    }
+
+    .ratio-card:hover {
+      background: var(--card-hover);
+      border-color: rgba(255, 255, 255, 0.2);
+    }
+
+    .ratio-card.active {
+      background: rgba(59, 130, 246, 0.15);
+      border-color: var(--primary);
+      color: #93c5fd;
+    }
+
+    .ratio-shape {
+      border: 2px solid currentColor;
+      border-radius: 4px;
+    }
+    .shape-16-9 { width: 34px; height: 19px; }
+    .shape-9-16 { width: 19px; height: 34px; }
+    .shape-4-3  { width: 28px; height: 21px; }
+    .shape-3-4  { width: 21px; height: 28px; }
+
+    /* Scene Cards Grid (Step 2 & 3) */
+    .scenes-grid {
+      display: grid;
+      grid-template-columns: repeat(auto-fit, minmax(360px, 1fr));
+      gap: 20px;
+    }
+
+    .scene-card {
+      background: rgba(0, 0, 0, 0.3);
+      border: 1px solid var(--card-border);
+      border-radius: 12px;
+      padding: 20px;
+      display: flex;
+      flex-direction: column;
+      gap: 14px;
+      transition: var(--transition);
+    }
+
+    .scene-card:hover {
+      border-color: rgba(255, 255, 255, 0.16);
+    }
+
+    .scene-badge {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+    }
+
+    .badge-tag {
+      background: rgba(59, 130, 246, 0.2);
+      color: #93c5fd;
+      font-size: 12px;
+      font-weight: 700;
+      padding: 4px 10px;
+      border-radius: 20px;
+    }
+
+    .badge-time {
+      font-family: 'JetBrains Mono', monospace;
+      font-size: 12px;
+      color: #e2e8f0;
+    }
+
+    .scene-textarea {
+      width: 100%;
+      background: rgba(255, 255, 255, 0.04);
+      border: 1px solid rgba(255, 255, 255, 0.1);
+      border-radius: 8px;
+      padding: 10px 12px;
+      font-family: inherit;
+      font-size: 13px;
+      color: #fff;
+      line-height: 1.5;
+      resize: vertical;
+      min-height: 80px;
+      outline: none;
+    }
+
+    .scene-textarea:focus {
+      border-color: var(--primary);
+    }
+
+    .topic-chip {
+      background: rgba(255, 255, 255, 0.05);
+      border: 1px solid rgba(255, 255, 255, 0.12);
+      border-radius: 16px;
+      padding: 4px 10px;
+      font-size: 11px;
+      color: #94a3b8;
+      cursor: pointer;
+      transition: all 0.2s;
+    }
+    .topic-chip:hover {
+      background: rgba(59, 130, 246, 0.2);
+      border-color: var(--primary);
+      color: #60a5fa;
+    }
+
+    .scene-image-preview {
+      width: 100%;
+      height: 240px;
+      border-radius: 8px;
+      object-fit: contain;
+      border: 1px solid var(--card-border);
+      background: #F6F1E3;
+      box-shadow: inset 0 2px 8px rgba(0, 0, 0, 0.1);
+    }
+
+    /* Buttons */
+    .actions-bar {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      margin-top: 10px;
+      gap: 14px;
+    }
+
+    .btn {
+      padding: 12px 24px;
+      border-radius: 10px;
+      font-family: inherit;
+      font-size: 14px;
+      font-weight: 600;
+      cursor: pointer;
+      display: flex;
+      align-items: center;
+      gap: 8px;
+      transition: var(--transition);
+      border: none;
+    }
+
+    .btn-secondary {
+      background: rgba(255, 255, 255, 0.06);
+      color: var(--text);
+      border: 1px solid var(--card-border);
+    }
+    .btn-secondary:hover {
+      background: rgba(255, 255, 255, 0.12);
+    }
+
+    .btn-primary {
+      background: linear-gradient(135deg, var(--primary), var(--accent));
+      color: #fff;
+      box-shadow: 0 4px 16px var(--primary-glow);
+    }
+    .btn-primary:hover:not(:disabled) {
+      transform: translateY(-1px);
+      box-shadow: 0 6px 22px rgba(59, 130, 246, 0.5);
+    }
+
+    .btn-success {
+      background: linear-gradient(135deg, #10b981, #059669);
+      color: #fff;
+      box-shadow: 0 4px 16px rgba(16, 185, 129, 0.3);
+    }
+
+    .btn:disabled {
+      opacity: 0.5;
+      cursor: not-allowed;
+      transform: none;
+    }
+
+    /* Video Final Stage */
+    .final-video-box {
+      width: 100%;
+      max-height: 520px;
+      border-radius: 12px;
+      background: #000;
+      border: 1px solid var(--card-border);
+    }
+
+    .progress-box {
+      background: rgba(0, 0, 0, 0.4);
+      padding: 18px;
+      border-radius: 10px;
+      border: 1px solid var(--card-border);
+      display: flex;
+      flex-direction: column;
+      gap: 10px;
+    }
+
+    .progress-bar-bg {
+      height: 8px;
+      background: rgba(255, 255, 255, 0.08);
+      border-radius: 4px;
+      overflow: hidden;
+    }
+
+    .progress-bar-fill {
+      height: 100%;
+      width: 0%;
+      background: linear-gradient(90deg, var(--accent-cyan), var(--primary));
+      transition: width 0.3s ease;
+    }
+
+    .modal-overlay {
+      position: fixed;
+      inset: 0;
+      background: rgba(0, 0, 0, 0.75);
+      backdrop-filter: blur(8px);
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      z-index: 1000;
+    }
+    .modal-card {
+      background: #141822;
+      border: 1px solid var(--card-border);
+      border-radius: 16px;
+      padding: 26px 28px;
+      max-width: 520px;
+      width: 92%;
+      box-shadow: 0 20px 50px rgba(0, 0, 0, 0.6);
+    }
+  </style>
+</head>
+<body>
+
+  <!-- Top Bar -->
+  <header>
+    <div class="brand">
+      <div class="brand-icon">🎨</div>
+      <div>
+        <div class="brand-title">Whiteboard Studio AI</div>
+      </div>
+      <div class="brand-tag">Quy trình sản xuất 4 bước</div>
+    </div>
+    <div style="display: flex; align-items: center; gap: 14px;">
+      <div style="font-size: 13px; color: var(--text-muted);">
+        Chế độ: <b style="color: #60a5fa;">8s / mỗi phân cảnh</b>
+      </div>
+      <button type="button" class="btn btn-secondary" onclick="openApiModal()" style="padding: 7px 14px; font-size: 12px; border-radius: 8px;">
+        <span id="aiStatusDot" style="width: 8px; height: 8px; border-radius: 50%; background: #eab308; display: inline-block;"></span>
+        <span id="aiStatusLabel">⚙️ Cài đặt AI API Key</span>
+      </button>
+    </div>
+  </header>
+
+  <!-- Stepper -->
+  <div class="stepper-wrap">
+    <div class="stepper">
+      <div id="stepHeader1" class="step-item active">
+        <div class="step-num">1</div>
+        <span>Nhập chủ đề</span>
+      </div>
+      <div class="step-line"></div>
+      <div id="stepHeader2" class="step-item">
+        <div class="step-num">2</div>
+        <span>Xác nhận kịch bản</span>
+      </div>
+      <div class="step-line"></div>
+      <div id="stepHeader3" class="step-item">
+        <div class="step-num">3</div>
+        <span>Duyệt hình ảnh</span>
+      </div>
+      <div class="step-line"></div>
+      <div id="stepHeader4" class="step-item">
+        <div class="step-num">4</div>
+        <span>Xuất video hoàn chỉnh</span>
+      </div>
+    </div>
+  </div>
+
+  <!-- Main Views Container -->
+  <main>
+
+    <!-- STEP 1: NHẬP CHỦ ĐỀ & TỈ LỆ -->
+    <div id="stepView1" class="view-card">
+      <div class="card-head">
+        <h2>💡 Bước 1: Ý tưởng & Tỉ lệ khung hình</h2>
+        <p>Nhập chủ đề bạn muốn làm video, chọn tỉ lệ khung hình mong muốn.</p>
+      </div>
+
+      <div class="form-group">
+        <label><span>Chủ đề video của bạn:</span></label>
+        <input type="text" id="topicInput" class="input-text" value="Lợi ích của việc uống nước mỗi ngày" placeholder="Ví dụ: Lợi ích của việc chạy bộ, 5 Thói quen tập trung...">
+        <div style="display: flex; gap: 8px; flex-wrap: wrap; margin-top: 8px;">
+          <span style="font-size: 11px; color: var(--text-muted); align-self: center;">Thử nhanh:</span>
+          <button type="button" class="topic-chip" onclick="setTopic(this.innerText)">Lợi ích của việc uống nước mỗi ngày</button>
+          <button type="button" class="topic-chip" onclick="setTopic(this.innerText)">5 Thói quen giúp bạn làm việc tập trung</button>
+          <button type="button" class="topic-chip" onclick="setTopic(this.innerText)">Tại sao chúng ta thường hay trì hoãn?</button>
+          <button type="button" class="topic-chip" onclick="setTopic(this.innerText)">Bí quyết tiết kiệm tiền 50/30/20</button>
+          <button type="button" class="topic-chip" onclick="setTopic(this.innerText)">Quy tắc 80/20 trong công việc</button>
+        </div>
+      </div>
+
+      <div class="form-group">
+        <label>
+          <span>Tỉ lệ khung hình:</span>
+          <span id="selectedRatioText" style="color: #60a5fa; font-weight: 500;">16:9 (YouTube ngang)</span>
+        </label>
+        <div class="ratio-grid">
+          <div class="ratio-card active" onclick="chooseRatio('16:9')">
+            <div class="ratio-shape shape-16-9"></div>
+            <span style="font-weight: 600; font-size: 13px;">16:9</span>
+            <span style="font-size: 11px; color: var(--text-muted);">YouTube</span>
+          </div>
+          <div class="ratio-card" onclick="chooseRatio('9:16')">
+            <div class="ratio-shape shape-9-16"></div>
+            <span style="font-weight: 600; font-size: 13px;">9:16</span>
+            <span style="font-size: 11px; color: var(--text-muted);">TikTok / Shorts</span>
+          </div>
+          <div class="ratio-card" onclick="chooseRatio('4:3')">
+            <div class="ratio-shape shape-4-3"></div>
+            <span style="font-weight: 600; font-size: 13px;">4:3</span>
+            <span style="font-size: 11px; color: var(--text-muted);">iPad / Slide</span>
+          </div>
+          <div class="ratio-card" onclick="chooseRatio('3:4')">
+            <div class="ratio-shape shape-3-4"></div>
+            <span style="font-weight: 600; font-size: 13px;">3:4</span>
+            <span style="font-size: 11px; color: var(--text-muted);">Facebook</span>
+          </div>
+        </div>
+      </div>
+
+      <div class="form-group">
+        <label><span>Số lượng phân cảnh:</span></label>
+        <div style="display: flex; gap: 12px;">
+          <button type="button" class="btn btn-secondary active" id="btnScene2" onclick="setSceneCount(2)" style="flex:1;">
+            <span>2 Phân cảnh (~16 giây)</span>
+          </button>
+          <button type="button" class="btn btn-secondary" id="btnScene3" onclick="setSceneCount(3)" style="flex:1;">
+            <span>3 Phân cảnh (~24 giây)</span>
+          </button>
+        </div>
+      </div>
+
+      <div class="actions-bar" style="justify-content: flex-end;">
+        <button class="btn btn-primary" onclick="goToStep2()">
+          <span>Tiếp tục: Phác họa kịch bản ➔</span>
+        </button>
+      </div>
+    </div>
+
+    <!-- STEP 2: XÁC NHẬN KỊCH BẢN -->
+    <div id="stepView2" class="view-card" style="display: none;">
+      <div class="card-head">
+        <h2>📝 Bước 2: Xác nhận kịch bản phân cảnh</h2>
+        <p>Hệ thống đã tự động phác họa kịch bản. Bạn có thể sửa trực tiếp nội dung từng câu thoại trước khi chốt.</p>
+      </div>
+
+      <div id="scenesScriptList" class="scenes-grid">
+        <!-- Rendered dynamically -->
+      </div>
+
+      <div class="actions-bar">
+        <button class="btn btn-secondary" onclick="goToStep1()">
+          <span>← Quay lại sửa chủ đề</span>
+        </button>
+        <button class="btn btn-primary" onclick="goToStep3()">
+          <span>✓ Xác nhận kịch bản & Tạo hình ảnh ➔</span>
+        </button>
+      </div>
+    </div>
+
+    <!-- STEP 3: DUYỆT HÌNH ẢNH MINH HỌA -->
+    <div id="stepView3" class="view-card" style="display: none;">
+      <div class="card-head">
+        <h2>🎨 Bước 3: Duyệt hình ảnh phác thảo Doodle</h2>
+        <p>Mỗi phân cảnh tương ứng với 1 bức tranh vẽ nét. Bạn xem duyệt từng ảnh trước khi render video.</p>
+      </div>
+
+      <div id="scenesImageList" class="scenes-grid">
+        <!-- Rendered dynamically -->
+      </div>
+
+      <div class="actions-bar">
+        <button class="btn btn-secondary" onclick="goToStep2()">
+          <span>← Chỉnh lại kịch bản</span>
+        </button>
+        <button class="btn btn-success" onclick="startFullProduction()">
+          <span>🚀 Xác nhận ảnh & Bắt đầu Render Video Hoàn Chỉnh!</span>
+        </button>
+      </div>
+    </div>
+
+    <!-- STEP 4: RENDER & XUẤT VIDEO HOÀN CHỈNH -->
+    <div id="stepView4" class="view-card" style="display: none;">
+      <div class="card-head">
+        <h2>🎬 Bước 4: Video thành phẩm hoàn chỉnh</h2>
+        <p id="renderStatusText">Hệ thống đang render từng phân cảnh và tự động ghép nối...</p>
+      </div>
+
+      <!-- Progress bar -->
+      <div id="renderProgressBox" class="progress-box">
+        <div style="display: flex; justify-content: space-between; font-size: 13px;">
+          <span id="renderStageDesc">Đang chuẩn bị...</span>
+          <span id="renderStagePercent" style="font-family: 'JetBrains Mono', monospace; font-weight: 700; color: #60a5fa;">0%</span>
+        </div>
+        <div class="progress-bar-bg">
+          <div id="renderBarFill" class="progress-bar-fill"></div>
+        </div>
+      </div>
+
+      <!-- Final Video Player -->
+      <div id="videoContainer" style="display: none; flex-direction: column; gap: 16px; align-items: center;">
+        <video id="finalVideoPlayer" class="final-video-box" controls autoplay loop playsinline></video>
+        <div style="display: flex; gap: 14px; width: 100%; justify-content: center;">
+          <button id="downloadBtn" type="button" onclick="downloadCompletedVideo()" class="btn btn-success" style="padding: 14px 32px; font-size: 15px;">
+            <span>⬇ Tải Video Hoàn Chỉnh Về Máy</span>
+          </button>
+          <button class="btn btn-secondary" onclick="resetToStart()">
+            <span>✨ Tạo video chủ đề khác</span>
+          </button>
+        </div>
+      </div>
+
+    </div>
+
+  </main>
+
+  <!-- Modal Cấu hình AI -->
+  <div id="apiModal" class="modal-overlay" style="display: none;">
+    <div class="modal-card" style="max-width: 620px;">
+      <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 16px;">
+        <h3 style="font-size: 18px; font-weight: 700; color: #fff;">⚙️ Cấu hình AI (Kịch bản & Vẽ tranh minh họa)</h3>
+        <button onclick="closeApiModal()" style="background: none; border: none; color: #94a3b8; font-size: 20px; cursor: pointer;">✕</button>
+      </div>
+
+      <!-- PHẦN 1: AI SOẠN KỊCH BẢN -->
+      <div style="background: rgba(255,255,255,0.03); border: 1px solid var(--card-border); border-radius: 10px; padding: 14px; margin-bottom: 16px;">
+        <div style="font-weight: 600; font-size: 14px; color: #60a5fa; margin-bottom: 8px;">📝 1. AI Soạn Kịch Bản (Text LLM)</div>
+        <div style="display: flex; gap: 8px; margin-bottom: 10px;">
+          <button type="button" class="btn btn-secondary active" id="btnProviderGemini" onclick="selectScriptProvider('gemini')" style="flex: 1; padding: 8px 12px; font-size: 12px;">
+            <span>Google Gemini 3 Flash</span>
+          </button>
+          <button type="button" class="btn btn-secondary" id="btnProviderOpenAI" onclick="selectScriptProvider('openai')" style="flex: 1; padding: 8px 12px; font-size: 12px;">
+            <span>OpenAI (GPT-4o)</span>
+          </button>
+        </div>
+        <div id="groupGeminiKey">
+          <label style="display: flex; justify-content: space-between; font-size: 12px; margin-bottom: 4px;">
+            <span>Gemini API Key:</span>
+            <a href="https://aistudio.google.com/app/apikey" target="_blank" style="color: #60a5fa; font-size: 11px; text-decoration: none;">🔗 Google AI Studio ➔</a>
+          </label>
+          <input type="password" id="geminiApiKeyInput" class="input-text" style="font-size: 12px;" placeholder="AIzaSy...">
+        </div>
+        <div id="groupOpenAIKey" style="display: none;">
+          <label style="display: flex; justify-content: space-between; font-size: 12px; margin-bottom: 4px;">
+            <span>OpenAI API Key:</span>
+            <a href="https://platform.openai.com/api-keys" target="_blank" style="color: #60a5fa; font-size: 11px; text-decoration: none;">🔗 OpenAI Platform ➔</a>
+          </label>
+          <input type="password" id="openaiApiKeyInput" class="input-text" style="font-size: 12px;" placeholder="sk-...">
+        </div>
+      </div>
+
+      <!-- PHẦN 2: AI VẼ TRANH MINH HỌA -->
+      <div style="background: rgba(255,255,255,0.03); border: 1px solid var(--card-border); border-radius: 10px; padding: 14px; margin-bottom: 16px;">
+        <div style="font-weight: 600; font-size: 14px; color: #a78bfa; margin-bottom: 8px;">🎨 2. AI Vẽ Tranh Doodle Whiteboard</div>
+        <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 8px; margin-bottom: 12px;">
+          <button type="button" class="btn btn-secondary active" id="btnImgHF" onclick="selectImageProvider('huggingface')" style="padding: 8px 10px; font-size: 12px;">
+            <span>🤗 Hugging Face (FLUX)</span>
+          </button>
+          <button type="button" class="btn btn-secondary" id="btnImgMuse" onclick="selectImageProvider('muse')" style="padding: 8px 10px; font-size: 12px;">
+            <span>🏛️ MUSE AI (1 Tỷ Token)</span>
+          </button>
+          <button type="button" class="btn btn-secondary" id="btnImgPollinations" onclick="selectImageProvider('pollinations')" style="padding: 8px 10px; font-size: 12px;">
+            <span>🌐 Pollinations (Free 100%)</span>
+          </button>
+          <button type="button" class="btn btn-secondary" id="btnImgDalle" onclick="selectImageProvider('openai')" style="padding: 8px 10px; font-size: 12px;">
+            <span>🤖 OpenAI DALL-E 3</span>
+          </button>
+        </div>
+
+        <!-- Group Hugging Face -->
+        <div id="groupImgHF">
+          <label style="display: flex; justify-content: space-between; font-size: 12px; margin-bottom: 4px;">
+            <span>Hugging Face Access Token (Free):</span>
+            <a href="https://huggingface.co/settings/tokens" target="_blank" style="color: #a78bfa; font-size: 11px; text-decoration: none;">🔗 Lấy Token Free tại HuggingFace ➔</a>
+          </label>
+          <input type="password" id="hfTokenInput" class="input-text" style="font-size: 12px; margin-bottom: 8px;" placeholder="hf_... (để trống sẽ tự động dùng Pollinations miễn phí)">
+          <div style="display: flex; align-items: center; justify-content: space-between;">
+            <span style="font-size: 11px; color: var(--text-muted);">Mô hình HuggingFace:</span>
+            <select id="hfModelSelect" class="input-text" style="width: auto; padding: 4px 8px; font-size: 11px;">
+              <option value="black-forest-labs/FLUX.1-schnell">FLUX.1-schnell (Khuyên dùng - Nhanh & Sắc nét)</option>
+              <option value="stabilityai/stable-diffusion-xl-base-1.0">SDXL Base 1.0 (Whiteboard Line Art)</option>
+            </select>
+          </div>
+        </div>
+
+        <!-- Group MUSE AI -->
+        <div id="groupImgMuse" style="display: none;">
+          <div style="background: rgba(139, 92, 246, 0.1); border: 1px solid rgba(139, 92, 246, 0.3); border-radius: 6px; padding: 8px; font-size: 11px; color: #c4b5fd; margin-bottom: 8px;">
+            ✨ <b>Đã sẵn sàng kết nối MUSE:</b> Ngay khi bạn nhận được 1 tỷ token miễn phí, dán token vào đây để hệ thống tự động sinh ảnh từ MUSE.
+          </div>
+          <label style="font-size: 12px; margin-bottom: 4px; display: block;">MUSE Bearer Token / API Key:</label>
+          <input type="password" id="museTokenInput" class="input-text" style="font-size: 12px; margin-bottom: 8px;" placeholder="Dán token MUSE của bạn vào đây...">
+          <label style="font-size: 11px; color: var(--text-muted); margin-bottom: 4px; display: block;">Endpoint API MUSE (Tùy biến):</label>
+          <input type="text" id="museEndpointInput" class="input-text" style="font-size: 12px;" value="https://api.muse.ai/v1/generate">
+        </div>
+
+        <!-- Group Pollinations -->
+        <div id="groupImgPollinations" style="display: none;">
+          <div style="background: rgba(16, 185, 129, 0.1); border: 1px solid rgba(16, 185, 129, 0.3); border-radius: 6px; padding: 8px; font-size: 12px; color: #6ee7b7;">
+            ⚡ <b>100% Miễn phí & Hoạt động tức thì:</b> Không cần API Key, không cần tài khoản. Tự động vẽ tranh hoạt hình Whiteboard doodle đúng chủ đề.
+          </div>
+        </div>
+
+        <!-- Group DALL-E -->
+        <div id="groupImgDalle" style="display: none;">
+          <div style="font-size: 12px; color: var(--text-muted);">
+            Sử dụng OpenAI API Key ở phần 1 để gọi mô hình DALL-E 3 tạo ảnh doodle bảng trắng chất lượng cao.
+          </div>
+        </div>
+
+      </div>
+
+      <div style="display: flex; justify-content: flex-end; gap: 10px;">
+        <button class="btn btn-secondary" onclick="closeApiModal()">Đóng</button>
+        <button class="btn btn-primary" onclick="saveApiConfig()">💾 Lưu Cấu Hình AI</button>
+      </div>
+    </div>
+  </div>
+
+  <script>
+    // App State
+    let currentStep = 1;
+    let selectedRatio = '16:9';
+    let sceneCount = 2;
+
+    // AI Configuration State
+    let activeProvider = localStorage.getItem('wb_ai_provider') || 'gemini';
+    let geminiApiKey = localStorage.getItem('wb_gemini_key') || '';
+    let openaiApiKey = localStorage.getItem('wb_openai_key') || '';
+
+    let imageProvider = localStorage.getItem('wb_img_provider') || 'huggingface';
+    let hfToken = localStorage.getItem('wb_hf_token') || '';
+    let hfModel = localStorage.getItem('wb_hf_model') || 'black-forest-labs/FLUX.1-schnell';
+    let museToken = localStorage.getItem('wb_muse_token') || '';
+    let museEndpoint = localStorage.getItem('wb_muse_endpoint') || 'https://api.muse.ai/v1/generate';
+
+    // Load server config on startup if local empty
+    (async function initAiConfig() {
+      try {
+        const res = await fetch('/api/ai-config');
+        const data = await res.json();
+        if (data.ok && data.config) {
+          const c = data.config;
+          if (!geminiApiKey && c.gemini_api_key) {
+            geminiApiKey = c.gemini_api_key;
+            localStorage.setItem('wb_gemini_key', geminiApiKey);
+          }
+          if (!openaiApiKey && c.openai_api_key) {
+            openaiApiKey = c.openai_api_key;
+            localStorage.setItem('wb_openai_key', openaiApiKey);
+          }
+          if (c.provider) {
+            activeProvider = c.provider;
+            localStorage.setItem('wb_ai_provider', activeProvider);
+          }
+          if (c.image_provider) {
+            imageProvider = c.image_provider;
+            localStorage.setItem('wb_img_provider', imageProvider);
+          }
+          if (!hfToken && c.huggingface_token) {
+            hfToken = c.huggingface_token;
+            localStorage.setItem('wb_hf_token', hfToken);
+          }
+          if (c.huggingface_model) {
+            hfModel = c.huggingface_model;
+            localStorage.setItem('wb_hf_model', hfModel);
+          }
+          if (!museToken && c.muse_token) {
+            museToken = c.muse_token;
+            localStorage.setItem('wb_muse_token', museToken);
+          }
+          if (c.muse_endpoint) {
+            museEndpoint = c.muse_endpoint;
+            localStorage.setItem('wb_muse_endpoint', museEndpoint);
+          }
+        }
+      } catch (e) {
+        console.log('Chưa tải được config server:', e);
+      }
+      updateAiIndicator();
+    })();
+
+    function openApiModal() {
+      document.getElementById('geminiApiKeyInput').value = geminiApiKey;
+      document.getElementById('openaiApiKeyInput').value = openaiApiKey;
+      document.getElementById('hfTokenInput').value = hfToken;
+      document.getElementById('hfModelSelect').value = hfModel;
+      document.getElementById('museTokenInput').value = museToken;
+      document.getElementById('museEndpointInput').value = museEndpoint;
+
+      selectScriptProvider(activeProvider);
+      selectImageProvider(imageProvider);
+      document.getElementById('apiModal').style.display = 'flex';
+    }
+
+    function closeApiModal() {
+      document.getElementById('apiModal').style.display = 'none';
+    }
+
+    function selectScriptProvider(prov) {
+      activeProvider = prov;
+      document.getElementById('btnProviderGemini').classList.toggle('active', prov === 'gemini');
+      document.getElementById('btnProviderGemini').classList.toggle('btn-primary', prov === 'gemini');
+      document.getElementById('btnProviderOpenAI').classList.toggle('active', prov === 'openai');
+      document.getElementById('btnProviderOpenAI').classList.toggle('btn-primary', prov === 'openai');
+      document.getElementById('groupGeminiKey').style.display = (prov === 'gemini') ? 'block' : 'none';
+      document.getElementById('groupOpenAIKey').style.display = (prov === 'openai') ? 'block' : 'none';
+    }
+
+    function selectImageProvider(imgProv) {
+      imageProvider = imgProv;
+      ['HF', 'Muse', 'Pollinations', 'Dalle'].forEach(k => {
+        const btn = document.getElementById('btnImg' + k);
+        const isActive = (k === 'HF' && imgProv === 'huggingface') ||
+                         (k === 'Muse' && imgProv === 'muse') ||
+                         (k === 'Pollinations' && imgProv === 'pollinations') ||
+                         (k === 'Dalle' && imgProv === 'openai');
+        if (btn) {
+          btn.classList.toggle('active', isActive);
+          btn.classList.toggle('btn-primary', isActive);
+        }
+      });
+      document.getElementById('groupImgHF').style.display = (imgProv === 'huggingface') ? 'block' : 'none';
+      document.getElementById('groupImgMuse').style.display = (imgProv === 'muse') ? 'block' : 'none';
+      document.getElementById('groupImgPollinations').style.display = (imgProv === 'pollinations') ? 'block' : 'none';
+      document.getElementById('groupImgDalle').style.display = (imgProv === 'openai') ? 'block' : 'none';
+    }
+
+    async function saveApiConfig() {
+      geminiApiKey = document.getElementById('geminiApiKeyInput').value.trim();
+      openaiApiKey = document.getElementById('openaiApiKeyInput').value.trim();
+      hfToken = document.getElementById('hfTokenInput').value.trim();
+      hfModel = document.getElementById('hfModelSelect').value;
+      museToken = document.getElementById('museTokenInput').value.trim();
+      museEndpoint = document.getElementById('museEndpointInput').value.trim() || 'https://api.muse.ai/v1/generate';
+
+      localStorage.setItem('wb_ai_provider', activeProvider);
+      localStorage.setItem('wb_gemini_key', geminiApiKey);
+      localStorage.setItem('wb_openai_key', openaiApiKey);
+      localStorage.setItem('wb_img_provider', imageProvider);
+      localStorage.setItem('wb_hf_token', hfToken);
+      localStorage.setItem('wb_hf_model', hfModel);
+      localStorage.setItem('wb_muse_token', museToken);
+      localStorage.setItem('wb_muse_endpoint', museEndpoint);
+
+      try {
+        await fetch('/api/save-ai-config', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({
+            provider: activeProvider,
+            gemini_api_key: geminiApiKey,
+            openai_api_key: openaiApiKey,
+            image_provider: imageProvider,
+            huggingface_token: hfToken,
+            huggingface_model: hfModel,
+            muse_token: museToken,
+            muse_endpoint: museEndpoint
+          })
+        });
+      } catch (e) {
+        console.warn('Lưu config lên server thất bại, đã lưu trên browser:', e);
+      }
+
+      updateAiIndicator();
+      closeApiModal();
+      alert('Đã lưu cấu hình AI thành công!');
+    }
+
+    function getActiveApiKey() {
+      return (activeProvider === 'gemini') ? geminiApiKey : openaiApiKey;
+    }
+
+    function updateAiIndicator() {
+      const key = getActiveApiKey();
+      const dot = document.getElementById('aiStatusDot');
+      const label = document.getElementById('aiStatusLabel');
+      const imgNameMap = {
+        'huggingface': 'HuggingFace',
+        'muse': 'MUSE AI',
+        'pollinations': 'Pollinations',
+        'openai': 'DALL-E 3'
+      };
+      const curImgName = imgNameMap[imageProvider] || 'AI Tranh';
+
+      if (key || hfToken || museToken || imageProvider === 'pollinations') {
+        if (dot) dot.style.background = '#10b981';
+        if (label) label.textContent = `🟢 AI: ${activeProvider === 'gemini' ? 'Gemini' : 'OpenAI'} + ${curImgName}`;
+      } else {
+        if (dot) dot.style.background = '#eab308';
+        if (label) label.textContent = '⚙️ Cài đặt AI API Key';
+      }
+    }
+
+    // Generated Scenes Data
+    let projectScenes = [];
+
+    function chooseRatio(ratio) {
+      selectedRatio = ratio;
+      document.querySelectorAll('.ratio-card').forEach(c => {
+        c.classList.toggle('active', c.innerText.includes(ratio));
+      });
+      const names = {
+        '16:9': '16:9 (YouTube ngang)',
+        '9:16': '9:16 (TikTok / Shorts dọc)',
+        '4:3': '4:3 (iPad / Slide)',
+        '3:4': '3:4 (Facebook)'
+      };
+      document.getElementById('selectedRatioText').textContent = names[ratio];
+    }
+
+    function setSceneCount(count) {
+      sceneCount = count;
+      document.getElementById('btnScene2').classList.toggle('btn-primary', count === 2);
+      document.getElementById('btnScene2').classList.toggle('btn-secondary', count !== 2);
+      document.getElementById('btnScene3').classList.toggle('btn-primary', count === 3);
+      document.getElementById('btnScene3').classList.toggle('btn-secondary', count !== 3);
+    }
+
+    function updateStepperUI(step) {
+      currentStep = step;
+      for (let i = 1; i <= 4; i++) {
+        const item = document.getElementById('stepHeader' + i);
+        item.classList.remove('active', 'completed');
+        if (i < step) item.classList.add('completed');
+        if (i === step) item.classList.add('active');
+        document.getElementById('stepView' + i).style.display = (i === step) ? 'flex' : 'none';
+      }
+      window.scrollTo({ top: 0, behavior: 'smooth' });
+    }
+
+    // Step 1 -> Step 2: Auto generate script based on topic
+    async function goToStep2() {
+      const topic = document.getElementById('topicInput').value.trim() || 'Quy tắc 80/20 trong cuộc sống';
+      const btn = document.querySelector('#stepView1 .btn-primary');
+      const originalText = btn.innerHTML;
+      btn.disabled = true;
+      btn.innerHTML = '<span>⏳ Đang phân tích chủ đề & phác thảo kịch bản...</span>';
+
+      const key = getActiveApiKey();
+
+      try {
+        const res = await fetch('/api/generate-script', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({
+            topic: topic,
+            scene_count: sceneCount,
+            ratio: selectedRatio,
+            api_key: key,
+            provider: activeProvider
+          })
+        });
+
+        const data = await res.json();
+        if (data.ok && data.scenes) {
+          projectScenes = data.scenes;
+        }
+      } catch (err) {
+        console.error('Lỗi gọi API generate-script:', err);
+      } finally {
+        btn.disabled = false;
+        btn.innerHTML = originalText;
+      }
+
+      // Render Step 2 UI
+      const container = document.getElementById('scenesScriptList');
+      container.innerHTML = '';
+      projectScenes.forEach((sc, i) => {
+        const card = document.createElement('div');
+        card.className = 'scene-card';
+        card.innerHTML = `
+          <div class="scene-badge">
+            <span class="badge-tag">Phân cảnh ${sc.sceneIndex}</span>
+            <span class="badge-time">⏱️ ${sc.durationSec || 8.0}s</span>
+          </div>
+          <div style="font-weight: 600; font-size: 15px; color: #fff;">${sc.title}</div>
+          <div>
+            <label style="font-size: 12px; margin-bottom: 6px;">Lời thoại thuyết minh (bạn có thể gõ sửa trực tiếp):</label>
+            <textarea class="scene-textarea" oninput="projectScenes[${i}].subtitle = this.value">${sc.subtitle}</textarea>
+          </div>
+          <div style="font-size: 12px; color: #94a3b8;">
+            🎨 <b>Ý tưởng tranh vẽ:</b> ${sc.visualIdea || ''}
+          </div>
+          <div style="margin-top: 4px;">
+            <label style="font-size: 11px; color: #60a5fa; display: block; margin-bottom: 4px;">Prompt tranh Doodle (cho AI vẽ):</label>
+            <textarea class="scene-textarea" style="min-height: 48px; font-size: 11px; color: #93c5fd; background: rgba(59, 130, 246, 0.05); border-color: rgba(59, 130, 246, 0.2);" oninput="projectScenes[${i}].image_prompt = this.value">${sc.image_prompt || ''}</textarea>
+          </div>
+        `;
+        container.appendChild(card);
+      });
+
+      updateStepperUI(2);
+    }
+
+    function goToStep1() {
+      updateStepperUI(1);
+    }
+
+    function setTopic(text) {
+      document.getElementById('topicInput').value = text;
+    }
+
+    // Step 2 -> Step 3: Confirm Script -> Generate & Show Images
+    async function goToStep3() {
+      const btn = document.querySelector('#stepView2 .btn-primary');
+      const originalText = btn.innerHTML;
+      btn.disabled = true;
+      btn.innerHTML = '<span>🎨 AI đang vẽ tranh phác thảo Whiteboard từng phân cảnh...</span>';
+
+      const key = getActiveApiKey();
+
+      try {
+        const res = await fetch('/api/generate-images', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({
+            scenes: projectScenes,
+            ratio: selectedRatio,
+            api_key: key,
+            provider: activeProvider,
+            image_provider: imageProvider
+          })
+        });
+        const data = await res.json();
+        if (data.ok && data.scenes) {
+          projectScenes = data.scenes;
+        }
+      } catch (err) {
+        console.error('Lỗi gọi API generate-images:', err);
+      } finally {
+        btn.disabled = false;
+        btn.innerHTML = originalText;
+      }
+
+      const container = document.getElementById('scenesImageList');
+      container.innerHTML = '';
+
+      projectScenes.forEach((sc, i) => {
+        const card = document.createElement('div');
+        card.className = 'scene-card';
+        card.innerHTML = `
+          <div class="scene-badge">
+            <span class="badge-tag">Cảnh ${sc.sceneIndex} (8 Giây)</span>
+            <span class="badge-time">Tỉ lệ ${selectedRatio}</span>
+          </div>
+          <div style="position: relative;">
+            <img id="sceneImg_${i}" src="/${sc.imagePath}?t=${Date.now()}" class="scene-image-preview" alt="Preview">
+            <div id="sceneLoading_${i}" style="display: none; position: absolute; inset: 0; background: rgba(0,0,0,0.6); border-radius: 8px; align-items: center; justify-content: center; color: #fff; font-size: 13px;">
+              <span>⏳ Đang cập nhật ảnh...</span>
+            </div>
+          </div>
+          <div style="display: flex; gap: 8px; margin-top: 6px;">
+            <button type="button" class="btn btn-secondary" style="font-size: 12px; padding: 6px 12px; flex: 1;" onclick="regenerateScene(${i})">
+              🔄 Vẽ lại nét khác
+            </button>
+            <label class="btn btn-secondary" style="font-size: 12px; padding: 6px 12px; flex: 1; cursor: pointer; text-align: center; margin: 0;">
+              📁 Tải ảnh khác lên
+              <input type="file" accept="image/*" style="display: none;" onchange="uploadCustomSceneImage(${i}, this)">
+            </label>
+          </div>
+          <div style="font-size: 13px; color: #cbd5e1; font-weight: 500; margin-top: 6px; line-height: 1.4;">
+            "${sc.subtitle}"
+          </div>
+        `;
+        container.appendChild(card);
+      });
+
+      updateStepperUI(3);
+    }
+
+    async function regenerateScene(idx) {
+      const loader = document.getElementById('sceneLoading_' + idx);
+      if (loader) loader.style.display = 'flex';
+      const key = getActiveApiKey();
+      try {
+        const res = await fetch('/api/regenerate-scene', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({
+            scene: projectScenes[idx],
+            ratio: selectedRatio,
+            imagePath: projectScenes[idx].imagePath,
+            api_key: key,
+            provider: activeProvider,
+            image_provider: imageProvider
+          })
+        });
+        const data = await res.json();
+        if (data.ok && data.imagePath) {
+          projectScenes[idx].imagePath = data.imagePath;
+          const img = document.getElementById('sceneImg_' + idx);
+          if (img) img.src = '/' + data.imagePath + '?t=' + Date.now();
+        }
+      } catch (e) {
+        alert('Lỗi vẽ lại ảnh: ' + e.message);
+      } finally {
+        if (loader) loader.style.display = 'none';
+      }
+    }
+
+    async function uploadCustomSceneImage(idx, input) {
+      if (!input.files || !input.files[0]) return;
+      const file = input.files[0];
+      const loader = document.getElementById('sceneLoading_' + idx);
+      if (loader) loader.style.display = 'flex';
+
+      const formData = new FormData();
+      formData.append('image', file);
+
+      try {
+        const res = await fetch('/api/upload', {
+          method: 'POST',
+          body: formData
+        });
+        const data = await res.json();
+        if (data.ok && data.path) {
+          projectScenes[idx].imagePath = data.path;
+          const img = document.getElementById('sceneImg_' + idx);
+          if (img) img.src = '/' + data.path + '?t=' + Date.now();
+        } else {
+          alert('Không thể tải ảnh: ' + (data.error || 'Lỗi không xác định'));
+        }
+      } catch (e) {
+        alert('Lỗi upload ảnh: ' + e.message);
+      } finally {
+        if (loader) loader.style.display = 'none';
+      }
+    }
+
+    // Step 3 -> Step 4: Confirm Images -> Render Full Video
+    async function startFullProduction() {
+      updateStepperUI(4);
+
+      const statusText = document.getElementById('renderStatusText');
+      const desc = document.getElementById('renderStageDesc');
+      const percent = document.getElementById('renderStagePercent');
+      const bar = document.getElementById('renderBarFill');
+      const videoBox = document.getElementById('videoContainer');
+      const player = document.getElementById('finalVideoPlayer');
+      const dlBtn = document.getElementById('downloadBtn');
+
+      statusText.textContent = 'Đang tự động render từng phân cảnh 8s và ghép nối...';
+      desc.textContent = 'Đang render các phân cảnh...';
+      percent.textContent = '35%';
+      bar.style.width = '35%';
+
+      try {
+        const res = await fetch('/api/render-custom-project', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({
+            scenes: projectScenes,
+            ratio: selectedRatio
+          })
+        });
+
+        const data = await res.json();
+        if (data.ok && data.video_url) {
+          desc.textContent = 'Ghép nối hoàn tất!';
+          percent.textContent = '100%';
+          bar.style.width = '100%';
+          statusText.textContent = '🎉 Video hoàn chỉnh của bạn đã sẵn sàng!';
+
+          // Show video player
+          document.getElementById('renderProgressBox').style.display = 'none';
+          videoBox.style.display = 'flex';
+          currentVideoUrl = data.video_url;
+          player.src = data.video_url + '?t=' + Date.now();
+          player.play();
+        } else {
+          statusText.textContent = 'Lỗi trong quá trình render: ' + (data.error || 'Có lỗi xảy ra');
+        }
+      } catch (err) {
+        statusText.textContent = 'Lỗi kết nối server: ' + err.message;
+      }
+    }
+
+    let currentVideoUrl = '';
+
+    async function downloadCompletedVideo() {
+      if (!currentVideoUrl) {
+        alert('Chưa có video sẵn sàng để tải về!');
+        return;
+      }
+      const btn = document.getElementById('downloadBtn');
+      const originalText = btn.innerHTML;
+      btn.disabled = true;
+      btn.innerHTML = '<span>⏳ Đang tải video về máy...</span>';
+
+      try {
+        const dlUrl = currentVideoUrl + (currentVideoUrl.includes('?') ? '&' : '?') + 'download=1&name=whiteboard_video_complete.mp4';
+        const res = await fetch(dlUrl);
+        if (!res.ok) throw new Error('Không thể tải file video từ server');
+        const blob = await res.blob();
+        const blobUrl = URL.createObjectURL(blob);
+        const a = document.createElement('a');
+        a.href = blobUrl;
+        a.download = 'whiteboard_video_complete.mp4';
+        document.body.appendChild(a);
+        a.click();
+        document.body.removeChild(a);
+        setTimeout(() => URL.revokeObjectURL(blobUrl), 10000);
+      } catch (err) {
+        console.warn('Blob download error, trying direct window download:', err);
+        window.location.href = currentVideoUrl + '?download=1';
+      } finally {
+        btn.disabled = false;
+        btn.innerHTML = originalText;
+      }
+    }
+
+    function resetToStart() {
+      document.getElementById('renderProgressBox').style.display = 'flex';
+      document.getElementById('videoContainer').style.display = 'none';
+      updateStepperUI(1);
+    }
+
+    // Default select 2 scenes
+    setSceneCount(2);
+  </script>
+</body>
+</html>
